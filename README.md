@@ -1,4 +1,4 @@
-Legger til bilder av database-oppsettet i tilfelle database-filen ikke fungerer.  
+Legger til bilder av database-oppsettet i tilfelle database-filen ikke fungerer.   
 ![image](https://github.com/Stimag/visma-furniture/assets/114483420/26b3a2f6-6926-4846-a4cf-e0a2a885485e)
 ![image](https://github.com/Stimag/visma-furniture/assets/114483420/1b05eec4-0541-4e36-9e6d-515d25ff0824)
 ![image](https://github.com/Stimag/visma-furniture/assets/114483420/5b068118-6a05-48c6-8b13-f1b9c6984ef1)  
