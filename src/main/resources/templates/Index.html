@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Description</title>
+</head>
+<body>
+
+<label for="customerName">Customer Name:</label>
+<input type="text" id="customerName">
+
+<label for="category">Select a Category:</label>
+<select id="category">
+    <option value="Furniture">Furniture</option>
+    <option value="Textile">Textile</option>
+    <option value="Food">Food</option>
+</select>
+
+<label for="product">Select a Product:</label>
+<select id="product">
+    <!-- Products will be populated dynamically based on the selected category -->
+</select>
+
+<div id="productDescription"></div>
+<div id="productPrice"></div>
+
+<button onclick="addToCart()">Add to cart</button>
+<button onclick="createOrder()">Order products</button>
+
+<div id="orderStatus" style="display: none;">
+    <h2>Order successful</h2>
+</div>
+
+<div id="cart">
+    <h2>Cart</h2>
+    <ul id="cartProducts">
+        <!-- Products in cart will be displayed here -->
+    </ul>
+</div>
+
+<script>
+    let productsInCart = [];
+
+    // Function to fetch product description from the database
+    function fetchProductDescription(productName) {
+        fetch(`/api/products/description/${productName}`)
+            .then(response => response.text())
+            .then(description => {
+                document.getElementById('productDescription').textContent = description;
+            })
+            .catch(error => {
+                console.error('Error fetching product description:', error);
+                document.getElementById('productDescription').textContent = 'Error fetching product description';
+            });
+    }
+
+    // Function to fetch product price from the database
+    function fetchProductPrice(productName) {
+        fetch(`/api/products/price/${productName}`)
+            .then(response => response.text())
+            .then(price => {
+                document.getElementById('productPrice').textContent = "Price: " + price + "€";
+            })
+            .catch(error => {
+                console.error('Error fetching product price:', error);
+                document.getElementById('productPrice').textContent = 'Error fetching product price';
+            });
+    }
+
+    // Populate product dropdown based on the selected category
+    document.getElementById('category').addEventListener('change', function() {
+        const selectedCategory = this.value;
+        const productDropdown = document.getElementById('product');
+
+        // Clear existing options
+        productDropdown.innerHTML = '';
+
+        // Fetch products for the selected category
+        fetch(`/api/products?category=${selectedCategory}`)
+            .then(response => response.json())
+            .then(products => {
+                products.forEach((product, index) => {
+                    const option = document.createElement('option');
+                    option.textContent = product.name;
+                    option.value = product.name;
+                    productDropdown.appendChild(option);
+
+                    // Set the first product as the default selected option
+                    if (index === 0) {
+                        option.selected = true;
+                        fetchProductDescription(product.name);
+                        fetchProductPrice(product.name);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching products:', error);
+            });
+    });
+
+    // Fetch product description when a product is selected
+    document.getElementById('product').addEventListener('change', function() {
+        const selectedProduct = this.value;
+        fetchProductDescription(selectedProduct);
+        fetchProductPrice(selectedProduct);
+    });
+
+    // Function to add selected product to the cart
+    function addToCart() {
+        const selectedProduct = document.getElementById('product').value;
+        productsInCart.push(selectedProduct);
+        renderCart();
+        document.getElementById('orderStatus').style.display = 'none';
+    }
+
+    // Function to render products in cart
+    function renderCart() {
+        const cartList = document.getElementById('cartProducts');
+        cartList.innerHTML = '';
+        productsInCart.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            cartList.appendChild(li);
+        });
+    }
+
+    function createOrder() {
+        const customerName = document.getElementById('customerName').value;
+        if (customerName.trim() === '') {
+            alert('Please enter first name');
+            return;
+        }
+
+        // Prepare data to send to the backend
+        const orderDTO = {
+            customerName: customerName,
+            products: productsInCart
+        };
+
+        // Send POST request to the backend API
+        fetch('/api/orders/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderDTO)
+        })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Order created successfully');
+                    productsInCart = []; // Reset cart on successful order
+                    renderCart();
+                    document.getElementById('orderStatus').style.display = 'block';
+                } else {
+                    console.error('Failed to create order');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating order:', error);
+            });
+    }
+</script>
+</body>
+</html>
